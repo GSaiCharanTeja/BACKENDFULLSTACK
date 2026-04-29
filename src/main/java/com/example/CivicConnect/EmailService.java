@@ -1,23 +1,25 @@
 package com.example.CivicConnect;
 
-import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import sibApi.TransactionalEmailsApi;
-import sibModel.*;
+@Service
+public class EmailService {
 
-import sibApi.Configuration;
-import sibApi.auth.ApiKeyAuth;
-@Autowired
-private JavaMailSender mailSender;
+    @Autowired
+    private JavaMailSender mailSender;
 
-public void sendOtp(String toEmail, String otp) {
+    public void sendOtp(String toEmail, String otp) {
 
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setTo(toEmail);
-    message.setSubject("OTP Verification");
-    message.setText("Your OTP is: " + otp);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("OTP Verification");
+        message.setText("Your OTP is: " + otp);
 
-    mailSender.send(message);
+        mailSender.send(message);
+
+        System.out.println("OTP sent to email: " + toEmail);
+    }
 }
