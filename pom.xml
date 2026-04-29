@@ -33,11 +33,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-         <dependency>
-    <groupId>com.sendinblue</groupId>
-    <artifactId>sib-api-v3-sdk</artifactId>
-    <version>8.0.0</version>
-</dependency>
+         <repositories>
+    <repository>
+        <id>central</id>
+        <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+</repositories>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
