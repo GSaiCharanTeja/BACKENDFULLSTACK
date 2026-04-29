@@ -77,7 +77,7 @@ public class AuthController {
     // ✅ NEW: SEND OTP API
     // =========================================================
  // ================= VERIFY OTP ================
-
+private Map<String, String> otpStore = new HashMap<>();
 
     // ================= VERIFY OTP =================
     @PostMapping("/verify-otp")
