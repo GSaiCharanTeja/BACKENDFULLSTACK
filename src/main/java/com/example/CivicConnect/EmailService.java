@@ -9,37 +9,15 @@ import sibModel.*;
 
 import sibApi.Configuration;
 import sibApi.auth.ApiKeyAuth;
+@Autowired
+private JavaMailSender mailSender;
 
-@Service
-public class EmailService {
+public void sendOtp(String toEmail, String otp) {
 
-    public void sendOtp(String toEmail, String otp) {
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(toEmail);
+    message.setSubject("OTP Verification");
+    message.setText("Your OTP is: " + otp);
 
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-
-        ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
-
-        apiKey.setApiKey(System.getenv("BREVO_API_KEY")); // 🔥 IMPORTANT
-
-        TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
-
-        SendSmtpEmail email = new SendSmtpEmail();
-
-        email.setSender(new SendSmtpEmailSender()
-                .email("gavidisaicharanteja@gmail.com")
-                .name("CivicConnect"));
-
-        email.setTo(List.of(new SendSmtpEmailTo().email(toEmail)));
-
-        email.setSubject("OTP Verification");
-        email.setHtmlContent("<h3>Your OTP is: " + otp + "</h3>");
-
-        try {
-            apiInstance.sendTransacEmail(email);
-            System.out.println("✅ EMAIL SENT");
-        } catch (Exception e) {
-            System.out.println("❌ EMAIL FAILED");
-            e.printStackTrace();
-        }
-    }
+    mailSender.send(message);
 }
