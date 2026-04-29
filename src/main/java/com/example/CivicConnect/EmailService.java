@@ -5,14 +5,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-@Service
-public class EmailService {
-
-    @Autowired
-    private JavaMailSender mailSender;
-
-    public void sendOtp(String toEmail, String otp) {
-
+public void sendOtp(String toEmail, String otp) {
+    try {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
         message.setSubject("OTP Verification");
@@ -20,6 +14,8 @@ public class EmailService {
 
         mailSender.send(message);
 
-        System.out.println("OTP sent to email: " + toEmail);
+    } catch (Exception e) {
+        e.printStackTrace(); // 👈 VERY IMPORTANT
+        throw e;
     }
 }
