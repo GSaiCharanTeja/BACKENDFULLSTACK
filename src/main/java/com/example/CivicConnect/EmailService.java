@@ -21,42 +21,27 @@ public class EmailService {
     public boolean sendOtp(String toEmail, String otp) {
 
         try {
-            String url = "https://api.brevo.com/v3/smtp/email";
+    ResponseEntity<String> response =
+            restTemplate.postForEntity(url, request, String.class);
 
-            RestTemplate restTemplate = new RestTemplate();
+    System.out.println("✅ Status: " + response.getStatusCode());
+    System.out.println("✅ Body: " + response.getBody());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("accept", "application/json");
-            headers.set("api-key", apiKey);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+    return response.getStatusCode().is2xxSuccessful();
 
-            Map<String, Object> requestBody = new HashMap<>();
+} catch (HttpClientErrorException e) {
 
-            Map<String, String> sender = new HashMap<>();
-            sender.put("email", senderEmail);
+    System.out.println("❌ Brevo Error Status: " + e.getStatusCode());
+    System.out.println("❌ Brevo Error Body: " + e.getResponseBodyAsString());
 
-            Map<String, String> to = new HashMap<>();
-            to.put("email", toEmail);
-
-            requestBody.put("sender", sender);
-            requestBody.put("to", List.of(to));
-            requestBody.put("subject", "OTP Verification");
-            requestBody.put("htmlContent", "<h3>Your OTP is: " + otp + "</h3>");
-
-            HttpEntity<Map<String, Object>> request =
-                    new HttpEntity<>(requestBody, headers);
-
-          ResponseEntity<String> response =
-        restTemplate.postForEntity(url, request, String.class);
-
-System.out.println("Status: " + response.getStatusCode());
-System.out.println("Response Body: " + response.getBody());
-
-return response.getStatusCode().is2xxSuccessful();
-        } catch (Exception e) {
-    System.out.println("❌ ERROR MESSAGE: " + e.getMessage());
-    e.printStackTrace();
     return false;
-        }
+
+} catch (Exception e) {
+
+    System.out.println("❌ General Error: " + e.getMessage());
+    e.printStackTrace();
+
+    return false;
+}
     }
 }
