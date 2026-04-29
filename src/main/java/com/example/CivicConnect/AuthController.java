@@ -15,7 +15,6 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
-    boolean isSent = emailService.sendOtp(email, otp);
     // ================= OTP STORAGE =================
     private Map<String, String> otpStore = new HashMap<>();
 
@@ -80,28 +79,33 @@ public class AuthController {
     // =========================================================
     // ✅ SEND OTP
     // =========================================================
-    @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
+   @PostMapping("/send-otp")
+public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
-        String email = body.get("email");
+    String email = body.get("email");
 
-        if (email == null || email.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email is required"));
-        }
-
-        // Generate OTP
-        String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
-
-        // Store OTP
-        otpStore.put(email, otp);
-
-        // Send email
-        emailService.sendOtp(email, otp);
-
-        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+    if (email == null || email.isEmpty()) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", "Email is required"));
     }
 
+    // Generate OTP
+    String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
+
+    // Store OTP
+    otpStore.put(email, otp);
+
+    // Send email
+    boolean isSent = emailService.sendOtp(email, otp);
+
+    if (isSent) {
+        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+    } else {
+        return ResponseEntity.status(500)
+                .body(Map.of("message", "Email sending failed ❌"));
+    }
+}
+    
     // =========================================================
     // ✅ VERIFY OTP
     // =========================================================
