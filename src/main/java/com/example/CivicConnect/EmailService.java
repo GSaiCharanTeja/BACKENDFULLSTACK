@@ -15,35 +15,45 @@ public class EmailService {
     private String senderEmail;
 
     public boolean sendOtp(String toEmail, String otp) {
-        try {
-            String url = "https://api.brevo.com/v3/smtp/email";
 
-            RestTemplate restTemplate = new RestTemplate();
+    try {
+        String url = "https://api.brevo.com/v3/smtp/email";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("accept", "application/json");
-            headers.set("api-key", apiKey);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+        RestTemplate restTemplate = new RestTemplate();
 
-            String body = "{\n" +
-                    "  \"sender\": {\"email\": \"" + senderEmail + "\"},\n" +
-                    "  \"to\": [{\"email\": \"" + toEmail + "\"}],\n" +
-                    "  \"subject\": \"OTP Verification\",\n" +
-                    "  \"htmlContent\": \"<h3>Your OTP is: " + otp + "</h3>\"\n" +
-                    "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("accept", "application/json");
+        headers.set("api-key", apiKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<String> request = new HttpEntity<>(body, headers);
+        // Build request safely
+        Map<String, Object> requestBody = new HashMap<>();
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, request, String.class);
+        Map<String, String> sender = new HashMap<>();
+        sender.put("email", senderEmail); // MUST be verified
 
-            System.out.println("Status: " + response.getStatusCode());
-            return response.getStatusCode().is2xxSuccessful();
+        Map<String, String> to = new HashMap<>();
+        to.put("email", toEmail);
 
-        } catch (Exception e) {
-            System.out.println("❌ Email sending failed");
-            e.printStackTrace();
-            return false;
-        }
+        requestBody.put("sender", sender);
+        requestBody.put("to", List.of(to));
+        requestBody.put("subject", "OTP Verification");
+        requestBody.put("htmlContent", "<h3>Your OTP is: " + otp + "</h3>");
+
+        HttpEntity<Map<String, Object>> request =
+                new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(url, request, String.class);
+
+        System.out.println("Brevo Response: " + response.getBody());
+
+        return response.getStatusCode().is2xxSuccessful();
+
+    } catch (Exception e) {
+        System.out.println("❌ Email sending failed");
+        e.printStackTrace();
+        return false;
     }
+}
 }
