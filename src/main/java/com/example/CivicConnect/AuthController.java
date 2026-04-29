@@ -76,27 +76,7 @@ public class AuthController {
     // =========================================================
     // ✅ NEW: SEND OTP API
     // =========================================================
- // ================= VERIFY OTP =================
-    private Map<String, String> otpStore = new HashMap<>();
-
-    @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
-
-        String email = body.get("email");
-
-        if (email == null || email.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
-        }
-
-        String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
-
-        // ✅ Store OTP
-        otpStore.put(email, otp);
-
-        emailService.sendOtp(email, String.valueOf(otp));
-
-        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
-    }
+ // ================= VERIFY OTP ================
 
 
     // ================= VERIFY OTP =================
