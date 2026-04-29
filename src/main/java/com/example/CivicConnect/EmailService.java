@@ -1,9 +1,12 @@
 package com.example.CivicConnect;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+import sibApi.*;
+import sibModel.*;
+
 @Service
 public class EmailService {
 
@@ -11,14 +14,16 @@ public class EmailService {
 
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
-        apiKey.setApiKey("YOUR_BREVO_API_KEY");
+
+        // ⚠️ DO NOT hardcode in real projects
+        apiKey.setApiKey(System.getenv("BREVO_API_KEY"));
 
         TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
 
         SendSmtpEmail email = new SendSmtpEmail();
 
         email.setSender(new SendSmtpEmailSender()
-                .email("your_verified_email@gmail.com")
+                .email("gavidisaicharanteja@gmail.com") // must be verified in Brevo
                 .name("CivicConnect"));
 
         email.setTo(List.of(new SendSmtpEmailTo().email(toEmail)));
@@ -28,7 +33,9 @@ public class EmailService {
 
         try {
             apiInstance.sendTransacEmail(email);
+            System.out.println("Email sent successfully ✅");
         } catch (Exception e) {
+            System.out.println("Email failed ❌");
             e.printStackTrace();
         }
     }
