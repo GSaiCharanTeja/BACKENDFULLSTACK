@@ -15,7 +15,7 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
-
+    boolean isSent = emailService.sendOtp(email, otp);
     // ================= OTP STORAGE =================
     private Map<String, String> otpStore = new HashMap<>();
 
