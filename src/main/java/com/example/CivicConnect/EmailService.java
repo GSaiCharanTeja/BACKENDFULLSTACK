@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import sibApi.*;
+import sibApi.ApiClient;
+import sibApi.Configuration;
+import sibApi.TransactionalEmailsApi;
 import sibModel.*;
 
 @Service
@@ -13,9 +15,8 @@ public class EmailService {
     public void sendOtp(String toEmail, String otp) {
 
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
 
-        // ⚠️ DO NOT hardcode in real projects
+        ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
         apiKey.setApiKey(System.getenv("BREVO_API_KEY"));
 
         TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
@@ -23,7 +24,7 @@ public class EmailService {
         SendSmtpEmail email = new SendSmtpEmail();
 
         email.setSender(new SendSmtpEmailSender()
-                .email("gavidisaicharanteja@gmail.com") // must be verified in Brevo
+                .email("gavidisaicharanteja@gmail.com") // MUST BE VERIFIED
                 .name("CivicConnect"));
 
         email.setTo(List.of(new SendSmtpEmailTo().email(toEmail)));
@@ -33,9 +34,9 @@ public class EmailService {
 
         try {
             apiInstance.sendTransacEmail(email);
-            System.out.println("Email sent successfully ✅");
+            System.out.println("✅ EMAIL SENT");
         } catch (Exception e) {
-            System.out.println("Email failed ❌");
+            System.out.println("❌ EMAIL FAILED");
             e.printStackTrace();
         }
     }
