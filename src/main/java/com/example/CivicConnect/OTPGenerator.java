@@ -5,14 +5,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class OTPGenerator {
 
-    private int generatedOTP;
+    private int otp;
 
     public int generateOTP() {
-        generatedOTP = (int)(Math.random() * 900000) + 100000;
-        return generatedOTP;
+        otp = (int)(Math.random() * 900000) + 100000;
+        return otp;
     }
 
     public int getGeneratedOTP() {
-        return generatedOTP;
+        return otp;
     }
 }
