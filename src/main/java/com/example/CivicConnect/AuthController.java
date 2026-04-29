@@ -93,7 +93,7 @@ public class AuthController {
         // ✅ Store OTP
         otpStore.put(email, otp);
 
-        emailService.sendOtp(email, otp);
+        emailService.sendOtp(email, String.valueOf(otp));
 
         return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
     }
