@@ -30,46 +30,27 @@ public class EmailService {
         System.out.println("❌ SENDER EMAIL NOT FOUND");
         return false;
     }
+        try {
+    ResponseEntity<String> response =
+            restTemplate.postForEntity(url, request, String.class);
 
-    try {
-        String url = "https://api.brevo.com/v3/smtp/email";
+    System.out.println("✅ Status: " + response.getStatusCode());
+    System.out.println("✅ Response: " + response.getBody());
 
-        RestTemplate restTemplate = new RestTemplate();
+    return response.getStatusCode().is2xxSuccessful();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("accept", "application/json");
-        headers.set("api-key", apiKey);
-        headers.setContentType(MediaType.APPLICATION_JSON);
+} catch (HttpClientErrorException e) {
 
-        Map<String, Object> requestBody = new HashMap<>();
+    System.out.println("❌ Brevo Status: " + e.getStatusCode());
+    System.out.println("❌ Brevo Error Body: " + e.getResponseBodyAsString());
 
-        Map<String, String> sender = new HashMap<>();
-        sender.put("email", senderEmail);
+    return false;
 
-        Map<String, String> to = new HashMap<>();
-        to.put("email", toEmail);
+} catch (Exception e) {
 
-        requestBody.put("sender", sender);
-        requestBody.put("to", List.of(to));
-        requestBody.put("subject", "OTP Verification");
-        requestBody.put("htmlContent", "<h3>Your OTP is: " + otp + "</h3>");
+    System.out.println("❌ General Error: " + e.getMessage());
+    e.printStackTrace();
 
-        HttpEntity<Map<String, Object>> request =
-                new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<String> response =
-                restTemplate.postForEntity(url, request, String.class);
-
-        System.out.println("Status: " + response.getStatusCode());
-        System.out.println("Body: " + response.getBody());
-
-        return response.getStatusCode().is2xxSuccessful();
-
-    } catch (Exception e) {
-        System.out.println("❌ Email sending failed");
-        System.out.println("❌ Error: " + e.getMessage());
-        e.printStackTrace();
-        return false;
-    }
+    return false;
 }
 }
