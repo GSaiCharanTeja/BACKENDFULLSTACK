@@ -91,4 +91,8 @@ public class UserService {
     public void clearAllUsers() {
         repo.deleteAll();
     }
+
+    public long count() {
+    return repo.count();
+}
 }
