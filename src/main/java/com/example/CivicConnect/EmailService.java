@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -12,45 +13,75 @@ import java.util.List;
 @Service
 public class EmailService {
 
-    @Value("${BREVO_API_KEY :}")
+    @Value("${BREVO_API_KEY:}")
     private String apiKey;
 
-    @Value("${BREVO_SENDER_EMAIL :}")
+    @Value("${BREVO_SENDER_EMAIL:}")
     private String senderEmail;
 
     public boolean sendOtp(String toEmail, String otp) {
 
-    // 🔥 ADD HERE (first lines inside method)
-    if (apiKey == null || apiKey.isEmpty()) {
-        System.out.println("❌ API KEY NOT FOUND");
-        return false;
-    }
+        // 🔥 Safety checks
+        if (apiKey == null || apiKey.isEmpty()) {
+            System.out.println("❌ API KEY NOT FOUND");
+            return false;
+        }
 
-    if (senderEmail == null || senderEmail.isEmpty()) {
-        System.out.println("❌ SENDER EMAIL NOT FOUND");
-        return false;
-    }
+        if (senderEmail == null || senderEmail.isEmpty()) {
+            System.out.println("❌ SENDER EMAIL NOT FOUND");
+            return false;
+        }
+
         try {
-    ResponseEntity<String> response =
-            restTemplate.postForEntity(url, request, String.class);
+            String url = "https://api.brevo.com/v3/smtp/email";
 
-    System.out.println("✅ Status: " + response.getStatusCode());
-    System.out.println("✅ Response: " + response.getBody());
+            RestTemplate restTemplate = new RestTemplate();
 
-    return response.getStatusCode().is2xxSuccessful();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("accept", "application/json");
+            headers.set("api-key", apiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-} catch (HttpClientErrorException e) {
+            // 🔥 Request body
+            Map<String, Object> requestBody = new HashMap<>();
 
-    System.out.println("❌ Brevo Status: " + e.getStatusCode());
-    System.out.println("❌ Brevo Error Body: " + e.getResponseBodyAsString());
+            Map<String, String> sender = new HashMap<>();
+            sender.put("email", senderEmail);
+            sender.put("name", "CivicConnect"); // 🔥 IMPORTANT
 
-    return false;
+            Map<String, String> to = new HashMap<>();
+            to.put("email", toEmail);
 
-} catch (Exception e) {
+            requestBody.put("sender", sender);
+            requestBody.put("to", List.of(to));
+            requestBody.put("subject", "OTP Verification");
+            requestBody.put("htmlContent", "<h3>Your OTP is: " + otp + "</h3>");
 
-    System.out.println("❌ General Error: " + e.getMessage());
-    e.printStackTrace();
+            HttpEntity<Map<String, Object>> request =
+                    new HttpEntity<>(requestBody, headers);
 
-    return false;
-}
+            // 🔥 API Call
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(url, request, String.class);
+
+            System.out.println("✅ Status: " + response.getStatusCode());
+            System.out.println("✅ Response: " + response.getBody());
+
+            return response.getStatusCode().is2xxSuccessful();
+
+        } catch (HttpClientErrorException e) {
+
+            System.out.println("❌ Brevo Status: " + e.getStatusCode());
+            System.out.println("❌ Brevo Error Body: " + e.getResponseBodyAsString());
+
+            return false;
+
+        } catch (Exception e) {
+
+            System.out.println("❌ General Error: " + e.getMessage());
+            e.printStackTrace();
+
+            return false;
+        }
+    }
 }
