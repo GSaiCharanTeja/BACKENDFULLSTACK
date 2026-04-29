@@ -13,23 +13,39 @@ import java.util.List;
 @Service
 public class EmailService {
 
-    @Value("${BREVO_API_KEY}")
+    @Value("${BREVO_API_KEY:}")
     private String apiKey;
 
-    @Value("${BREVO_SENDER_EMAIL}")
+    @Value("${BREVO_SENDER_EMAIL:}")
     private String senderEmail;
 
     public boolean sendOtp(String toEmail, String otp) {
 
-        // 🔥 Clean API key (handles Railway quotes issue)
+        // 🔍 DEBUG: See what Railway is actually sending
+        System.out.println("RAW API KEY: [" + apiKey + "]");
+        System.out.println("SENDER EMAIL: [" + senderEmail + "]");
+
+        // ❌ Handle null safely
+        if (apiKey == null || apiKey.isEmpty()) {
+            System.out.println("❌ API KEY is missing!");
+            return false;
+        }
+
+        // 🔥 Clean API key (remove quotes if any)
         String cleanApiKey = apiKey.trim();
         if (cleanApiKey.startsWith("\"") && cleanApiKey.endsWith("\"")) {
             cleanApiKey = cleanApiKey.substring(1, cleanApiKey.length() - 1);
         }
 
-        // 🔥 Safety check (important)
+        // 🔥 Validate key type
         if (!cleanApiKey.startsWith("xkeysib-")) {
             System.out.println("❌ Invalid API Key! Must start with xkeysib-");
+            return false;
+        }
+
+        // ❌ Check sender
+        if (senderEmail == null || senderEmail.isEmpty()) {
+            System.out.println("❌ Sender email missing!");
             return false;
         }
 
@@ -43,7 +59,7 @@ public class EmailService {
             headers.set("api-key", cleanApiKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // 🔥 Request body
+            // 📦 Request body
             Map<String, Object> requestBody = new HashMap<>();
 
             Map<String, String> sender = new HashMap<>();
@@ -61,11 +77,13 @@ public class EmailService {
             HttpEntity<Map<String, Object>> request =
                     new HttpEntity<>(requestBody, headers);
 
-            // 🔥 API Call
+            // 🚀 API Call
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, request, String.class);
 
             System.out.println("✅ Email Sent! Status: " + response.getStatusCode());
+            System.out.println("Response: " + response.getBody());
+
             return response.getStatusCode().is2xxSuccessful();
 
         } catch (HttpClientErrorException e) {
@@ -77,6 +95,7 @@ public class EmailService {
         } catch (Exception e) {
 
             System.out.println("❌ General Error: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
