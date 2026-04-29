@@ -18,7 +18,7 @@ public class OtpController {
 
         int otp = otpGenerator.generateOTP();
 
-        emailService.sendOTP(email, String.valueOf(otp));
+        emailService.sendOtp(email, String.valueOf(otp));
 
         return "OTP Sent Successfully ✅";
     }
