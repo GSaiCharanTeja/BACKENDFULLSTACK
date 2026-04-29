@@ -13,36 +13,23 @@ import java.util.List;
 @Service
 public class EmailService {
 
-    @Value("${BREVO_API_KEY:}")
+    @Value("${BREVO_API_KEY}")
     private String apiKey;
 
-    @Value("${BREVO_SENDER_EMAIL:}")
+    @Value("${BREVO_SENDER_EMAIL}")
     private String senderEmail;
 
     public boolean sendOtp(String toEmail, String otp) {
 
-        // 🔥 FIX: Clean API key (handles Railway quotes issue)
-        if (apiKey != null) {
-            apiKey = apiKey.trim();
-
-            if (apiKey.startsWith("\"") && apiKey.endsWith("\"")) {
-                apiKey = apiKey.substring(1, apiKey.length() - 1);
-            }
+        // 🔥 Clean API key (handles Railway quotes issue)
+        String cleanApiKey = apiKey.trim();
+        if (cleanApiKey.startsWith("\"") && cleanApiKey.endsWith("\"")) {
+            cleanApiKey = cleanApiKey.substring(1, cleanApiKey.length() - 1);
         }
 
-        // 🔍 DEBUG (VERY IMPORTANT)
-        System.out.println("🔑 API KEY: " + apiKey);
-        System.out.println("🔑 API KEY LENGTH: " + (apiKey != null ? apiKey.length() : 0));
-        System.out.println("📧 SENDER: " + senderEmail);
-
-        // 🔥 Safety checks
-        if (apiKey == null || apiKey.isEmpty()) {
-            System.out.println("❌ API KEY NOT FOUND");
-            return false;
-        }
-
-        if (senderEmail == null || senderEmail.isEmpty()) {
-            System.out.println("❌ SENDER EMAIL NOT FOUND");
+        // 🔥 Safety check (important)
+        if (!cleanApiKey.startsWith("xkeysib-")) {
+            System.out.println("❌ Invalid API Key! Must start with xkeysib-");
             return false;
         }
 
@@ -53,7 +40,7 @@ public class EmailService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("accept", "application/json");
-            headers.set("api-key", apiKey);
+            headers.set("api-key", cleanApiKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             // 🔥 Request body
@@ -78,24 +65,18 @@ public class EmailService {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, request, String.class);
 
-            System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Response: " + response.getBody());
-
+            System.out.println("✅ Email Sent! Status: " + response.getStatusCode());
             return response.getStatusCode().is2xxSuccessful();
 
         } catch (HttpClientErrorException e) {
 
-            // 🔥 MOST IMPORTANT DEBUG
-            System.out.println("❌ Brevo Status: " + e.getStatusCode());
-            System.out.println("❌ Brevo Error Body: " + e.getResponseBodyAsString());
-
+            System.out.println("❌ Brevo Error: " + e.getStatusCode());
+            System.out.println("❌ Body: " + e.getResponseBodyAsString());
             return false;
 
         } catch (Exception e) {
 
             System.out.println("❌ General Error: " + e.getMessage());
-            e.printStackTrace();
-
             return false;
         }
     }
