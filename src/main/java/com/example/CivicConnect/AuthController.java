@@ -79,7 +79,7 @@ public class AuthController {
     // =========================================================
     // ✅ SEND OTP
     // =========================================================
-   @PostMapping("/send-otp")
+  @PostMapping("/send-otp")
 public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
     String email = body.get("email");
@@ -89,13 +89,10 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
                 .body(Map.of("message", "Email is required"));
     }
 
-    // Generate OTP
     String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
 
-    // Store OTP
     otpStore.put(email, otp);
 
-    // Send email
     boolean isSent = emailService.sendOtp(email, otp);
 
     if (isSent) {
@@ -105,7 +102,6 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
                 .body(Map.of("message", "Email sending failed ❌"));
     }
 }
-    
     // =========================================================
     // ✅ VERIFY OTP
     // =========================================================
