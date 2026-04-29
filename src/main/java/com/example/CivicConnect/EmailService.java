@@ -7,9 +7,9 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class EmailService {
 
-    private static final String API_KEY = "YOUR_BREVO_API_KEY";
+    private static final String API_KEY = "YOUR_API_KEY";
 
-    public void sendOtp(String toEmail, String otp) {
+    public boolean sendOtp(String toEmail, String otp) {
 
         try {
             String url = "https://api.brevo.com/v3/smtp/email";
@@ -30,14 +30,13 @@ public class EmailService {
 
             HttpEntity<String> request = new HttpEntity<>(body, headers);
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, request, String.class);
+            restTemplate.postForEntity(url, request, String.class);
 
-            System.out.println("✅ Email sent successfully: " + response.getStatusCode());
+            return true;
 
         } catch (Exception e) {
-            System.out.println("❌ Email sending failed");
             e.printStackTrace();
+            return false;
         }
     }
 }
