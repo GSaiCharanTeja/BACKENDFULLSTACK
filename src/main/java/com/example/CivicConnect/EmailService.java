@@ -1,27 +1,39 @@
 package com.example.CivicConnect;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private static final String API_KEY = "YOUR_BREVO_API_KEY";
 
     public void sendOtp(String toEmail, String otp) {
 
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject("OTP Verification");
-            message.setText("Your OTP is: " + otp);
+            String url = "https://api.brevo.com/v3/smtp/email";
 
-            mailSender.send(message);
+            RestTemplate restTemplate = new RestTemplate();
 
-            System.out.println("✅ Email sent successfully");
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("accept", "application/json");
+            headers.set("api-key", API_KEY);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String body = "{\n" +
+                    "  \"sender\": {\"email\": \"your@email.com\"},\n" +
+                    "  \"to\": [{\"email\": \"" + toEmail + "\"}],\n" +
+                    "  \"subject\": \"OTP Verification\",\n" +
+                    "  \"htmlContent\": \"<h3>Your OTP is: " + otp + "</h3>\"\n" +
+                    "}";
+
+            HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(url, request, String.class);
+
+            System.out.println("✅ Email sent successfully: " + response.getStatusCode());
 
         } catch (Exception e) {
             System.out.println("❌ Email sending failed");
