@@ -21,6 +21,10 @@ public class EmailService {
 
     public boolean sendOtp(String toEmail, String otp) {
 
+        // 🔍 DEBUG (VERY IMPORTANT)
+        System.out.println("🔑 API KEY: " + apiKey);
+        System.out.println("📧 SENDER: " + senderEmail);
+
         // 🔥 Safety checks
         if (apiKey == null || apiKey.isEmpty()) {
             System.out.println("❌ API KEY NOT FOUND");
@@ -47,7 +51,7 @@ public class EmailService {
 
             Map<String, String> sender = new HashMap<>();
             sender.put("email", senderEmail);
-            sender.put("name", "CivicConnect"); // 🔥 IMPORTANT
+            sender.put("name", "CivicConnect");
 
             Map<String, String> to = new HashMap<>();
             to.put("email", toEmail);
@@ -71,6 +75,7 @@ public class EmailService {
 
         } catch (HttpClientErrorException e) {
 
+            // 🔥 MOST IMPORTANT DEBUG
             System.out.println("❌ Brevo Status: " + e.getStatusCode());
             System.out.println("❌ Brevo Error Body: " + e.getResponseBodyAsString());
 
