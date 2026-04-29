@@ -21,8 +21,18 @@ public class EmailService {
 
     public boolean sendOtp(String toEmail, String otp) {
 
+        // 🔥 FIX: Clean API key (handles Railway quotes issue)
+        if (apiKey != null) {
+            apiKey = apiKey.trim();
+
+            if (apiKey.startsWith("\"") && apiKey.endsWith("\"")) {
+                apiKey = apiKey.substring(1, apiKey.length() - 1);
+            }
+        }
+
         // 🔍 DEBUG (VERY IMPORTANT)
         System.out.println("🔑 API KEY: " + apiKey);
+        System.out.println("🔑 API KEY LENGTH: " + (apiKey != null ? apiKey.length() : 0));
         System.out.println("📧 SENDER: " + senderEmail);
 
         // 🔥 Safety checks
