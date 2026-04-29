@@ -7,25 +7,25 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
-
     @Autowired
-    private JavaMailSender mailSender;
+private JavaMailSender mailSender;
 
-    public void sendOtp(String toEmail, String otp) {
+public void sendOtp(String toEmail, String otp) {
+    try {
+        System.out.println("Sending mail to: " + toEmail);
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject("OTP Verification");
-            message.setText("Your OTP is: " + otp);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("OTP Verification");
+        message.setText("Your OTP is: " + otp);
 
-            mailSender.send(message);
+        mailSender.send(message);
 
-            System.out.println("MAIL SENT ✅");
+        System.out.println("MAIL SENT SUCCESSFULLY ✅");
 
-        } catch (Exception e) {
-            System.out.println("MAIL FAILED ❌");
-            e.printStackTrace();
-        }
+    } catch (Exception e) {
+        System.out.println("MAIL FAILED ❌");
+        e.printStackTrace();
     }
+}
 }
