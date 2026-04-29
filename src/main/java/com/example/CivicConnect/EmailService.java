@@ -46,17 +46,17 @@ public class EmailService {
             HttpEntity<Map<String, Object>> request =
                     new HttpEntity<>(requestBody, headers);
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, request, String.class);
+          ResponseEntity<String> response =
+        restTemplate.postForEntity(url, request, String.class);
 
-            System.out.println("Brevo Response: " + response.getBody());
+System.out.println("Status: " + response.getStatusCode());
+System.out.println("Response Body: " + response.getBody());
 
-            return response.getStatusCode().is2xxSuccessful();
-
+return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
-            System.out.println("❌ Email sending failed");
-            e.printStackTrace();
-            return false;
+    System.out.println("❌ ERROR MESSAGE: " + e.getMessage());
+    e.printStackTrace();
+    return false;
         }
     }
 }
