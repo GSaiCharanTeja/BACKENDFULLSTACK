@@ -1,13 +1,14 @@
 package com.example.CivicConnect;
 
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 
-import sibApi.ApiClient;
-import sibApi.Configuration;
+import org.springframework.stereotype.Service;
+
 import sibApi.TransactionalEmailsApi;
 import sibModel.*;
+
+import sibApi.Configuration;
+import sibApi.auth.ApiKeyAuth;
 
 @Service
 public class EmailService {
@@ -17,14 +18,15 @@ public class EmailService {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
 
         ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
-        apiKey.setApiKey(System.getenv("BREVO_API_KEY"));
+
+        apiKey.setApiKey(System.getenv("BREVO_API_KEY")); // 🔥 IMPORTANT
 
         TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
 
         SendSmtpEmail email = new SendSmtpEmail();
 
         email.setSender(new SendSmtpEmailSender()
-                .email("gavidisaicharanteja@gmail.com") // MUST BE VERIFIED
+                .email("gavidisaicharanteja@gmail.com")
                 .name("CivicConnect"));
 
         email.setTo(List.of(new SendSmtpEmailTo().email(toEmail)));
