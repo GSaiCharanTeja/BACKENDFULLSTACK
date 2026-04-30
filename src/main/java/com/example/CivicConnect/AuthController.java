@@ -95,18 +95,23 @@ public ResponseEntity<?> checkEmail(@RequestParam String email) {
 @PostMapping("/send-otp")
 public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
-    String email = body.get("email").toLowerCase().trim();
+    String email = body.get("email");
 
-    if (email.isEmpty()) {
+    // ✅ Null + empty check
+    if (email == null || email.trim().isEmpty()) {
         return ResponseEntity.badRequest()
                 .body(Map.of("message", "Email is required"));
     }
 
+    email = email.toLowerCase().trim();
+
+    // ✅ Email already exists
     if (service.existsByEmail(email)) {
-        return ResponseEntity.badRequest()
+        return ResponseEntity.status(409)
                 .body(Map.of("message", "Email already registered ❌"));
     }
 
+    // ✅ Generate OTP
     String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
 
     otpStore.put(email, otp);
@@ -120,5 +125,5 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
     return ResponseEntity.status(500)
             .body(Map.of("message", "Email sending failed ❌"));
-    }
+}
 }
