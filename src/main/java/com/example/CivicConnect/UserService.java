@@ -17,6 +17,11 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder encoder;
 
+    // ✅ CHECK EMAIL
+    public boolean existsByEmail(String email) {
+        return repo.existsByEmail(email.toLowerCase().trim());
+    }
+
     // ✅ SIGNUP
     public String register(User user) {
 
@@ -30,6 +35,10 @@ public class UserService {
 
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("CITIZEN");
+        }
+
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return "Password required ❌";
         }
 
         user.setPassword(encoder.encode(user.getPassword()));
@@ -58,6 +67,7 @@ public class UserService {
             return null;
         }
 
+        dbUser.setPassword(null); // 🔥 hide password
         return dbUser;
     }
 
@@ -67,13 +77,17 @@ public class UserService {
         String email = user.getEmail().toLowerCase().trim();
 
         if (repo.existsByEmail(email)) {
-            throw new RuntimeException("Email already exists");
+            throw new RuntimeException("Email already exists ❌");
         }
 
         user.setEmail(email);
 
         if (user.getRole() == null || user.getRole().isEmpty()) {
-            user.setRole("POLITICIAN");
+            user.setRole("CITIZEN");
+        }
+
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new RuntimeException("Password required ❌");
         }
 
         user.setPassword(encoder.encode(user.getPassword()));
@@ -91,7 +105,7 @@ public class UserService {
         repo.deleteById(id);
     }
 
-    // ✅ UPDATE USER (EMAIL LOCKED 🔒)
+    // ✅ UPDATE USER
     public User updateUser(Long id, User updatedUser) {
 
         User user = repo.findById(id)
@@ -104,8 +118,10 @@ public class UserService {
         user.setState(updatedUser.getState());
         user.setWardNumber(updatedUser.getWardNumber());
 
-        // ❌ DO NOT update email
-        // user.setEmail(...)
+        // 🔥 optional password update
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            user.setPassword(encoder.encode(updatedUser.getPassword()));
+        }
 
         return repo.save(user);
     }
