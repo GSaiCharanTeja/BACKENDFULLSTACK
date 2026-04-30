@@ -15,10 +15,11 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
+
     // ================= OTP STORAGE =================
     private Map<String, String> otpStore = new HashMap<>();
 
-    // ================= SIGNUP =================
+    // ================= SIGNUP (OLD - OPTIONAL KEEP) =================
     @PostMapping("/signup")
     public String signup(@RequestBody User user) {
         return service.register(user);
@@ -38,9 +39,15 @@ public class AuthController {
         return ResponseEntity.ok(loggedInUser);
     }
 
-    // ================= CREATE USER =================
+    // ================= CREATE USER (ADMIN) =================
     @PostMapping("/users")
     public User createUser(@RequestBody User user) {
+
+        // 🔥 prevent duplicate email
+        if (service.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists ❌");
+        }
+
         return service.createUser(user);
     }
 
@@ -77,33 +84,51 @@ public class AuthController {
     }
 
     // =========================================================
+    // ✅ CHECK EMAIL EXISTS
+    // =========================================================
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+
+        boolean exists = service.existsByEmail(email);
+
+        return ResponseEntity.ok(exists);
+    }
+
+    // =========================================================
     // ✅ SEND OTP
     // =========================================================
-  @PostMapping("/send-otp")
-public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
+    @PostMapping("/send-otp")
+    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
-    String email = body.get("email");
+        String email = body.get("email");
 
-    if (email == null || email.isEmpty()) {
-        return ResponseEntity.badRequest()
-                .body(Map.of("message", "Email is required"));
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Email is required"));
+        }
+
+        // 🔥 prevent duplicate email
+        if (service.existsByEmail(email)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Email already registered ❌"));
+        }
+
+        String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
+
+        otpStore.put(email, otp);
+
+        boolean isSent = emailService.sendOtp(email, otp);
+
+        if (isSent) {
+            return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+        } else {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Email sending failed ❌"));
+        }
     }
 
-    String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
-
-    otpStore.put(email, otp);
-
-    boolean isSent = emailService.sendOtp(email, otp);
-
-    if (isSent) {
-        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
-    } else {
-        return ResponseEntity.status(500)
-                .body(Map.of("message", "Email sending failed ❌"));
-    }
-}
     // =========================================================
-    // ✅ VERIFY OTP
+    // ✅ VERIFY OTP + CREATE USER
     // =========================================================
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
@@ -113,12 +138,30 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
         String storedOtp = otpStore.get(email);
 
-        if (storedOtp != null && storedOtp.equals(enteredOtp)) {
-            otpStore.remove(email);
-            return ResponseEntity.ok(Map.of("message", "OTP verified successfully"));
+        // ❌ invalid OTP
+        if (storedOtp == null || !storedOtp.equals(enteredOtp)) {
+            return ResponseEntity.status(400)
+                    .body(Map.of("message", "Invalid OTP ❌"));
         }
 
-        return ResponseEntity.status(400)
-                .body(Map.of("message", "Invalid OTP ❌"));
+        // ✅ remove OTP after success
+        otpStore.remove(email);
+
+        // 🔥 double check email
+        if (service.existsByEmail(email)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Email already exists ❌"));
+        }
+
+        // ✅ create user
+        User user = new User();
+        user.setName(body.get("name"));
+        user.setEmail(email);
+        user.setPassword(body.get("password"));
+        user.setRole(body.getOrDefault("role", "CITIZEN"));
+
+        User savedUser = service.createUser(user);
+
+        return ResponseEntity.ok(savedUser);
     }
 }
