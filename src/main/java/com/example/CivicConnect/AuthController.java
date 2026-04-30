@@ -83,85 +83,42 @@ public class AuthController {
         return "All users deleted successfully 💀";
     }
 
-    // =========================================================
-    // ✅ CHECK EMAIL EXISTS
-    // =========================================================
-    @GetMapping("/check-email")
-    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+    // ✅ CHECK EMAIL
+@GetMapping("/check-email")
+public ResponseEntity<?> checkEmail(@RequestParam String email) {
+    email = email.toLowerCase().trim();
+    boolean exists = service.existsByEmail(email);
+    return ResponseEntity.ok(Map.of("exists", exists));
+}
 
-        boolean exists = service.existsByEmail(email);
+// ✅ SEND OTP
+@PostMapping("/send-otp")
+public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
 
-        return ResponseEntity.ok(exists);
+    String email = body.get("email").toLowerCase().trim();
+
+    if (email.isEmpty()) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", "Email is required"));
     }
 
-    // =========================================================
-    // ✅ SEND OTP
-    // =========================================================
-    @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
-
-        String email = body.get("email");
-
-        if (email == null || email.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email is required"));
-        }
-
-        // 🔥 prevent duplicate email
-        if (service.existsByEmail(email)) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email already registered ❌"));
-        }
-
-        String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
-
-        otpStore.put(email, otp);
-
-        boolean isSent = emailService.sendOtp(email, otp);
-
-        if (isSent) {
-            return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
-        } else {
-            return ResponseEntity.status(500)
-                    .body(Map.of("message", "Email sending failed ❌"));
-        }
+    if (service.existsByEmail(email)) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", "Email already registered ❌"));
     }
 
-    // =========================================================
-    // ✅ VERIFY OTP + CREATE USER
-    // =========================================================
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
+    String otp = String.valueOf((int)(Math.random() * 900000) + 100000);
 
-        String email = body.get("email");
-        String enteredOtp = body.get("otp");
+    otpStore.put(email, otp);
+    otpExpiry.put(email, System.currentTimeMillis() + 5 * 60 * 1000);
 
-        String storedOtp = otpStore.get(email);
+    boolean isSent = emailService.sendOtp(email, otp);
 
-        // ❌ invalid OTP
-        if (storedOtp == null || !storedOtp.equals(enteredOtp)) {
-            return ResponseEntity.status(400)
-                    .body(Map.of("message", "Invalid OTP ❌"));
-        }
+    if (isSent) {
+        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+    }
 
-        // ✅ remove OTP after success
-        otpStore.remove(email);
-
-        // 🔥 double check email
-        if (service.existsByEmail(email)) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email already exists ❌"));
-        }
-
-        // ✅ create user
-        User user = new User();
-        user.setName(body.get("name"));
-        user.setEmail(email);
-        user.setPassword(body.get("password"));
-        user.setRole(body.getOrDefault("role", "CITIZEN"));
-
-        User savedUser = service.createUser(user);
-
-        return ResponseEntity.ok(savedUser);
+    return ResponseEntity.status(500)
+            .body(Map.of("message", "Email sending failed ❌"));
     }
 }
