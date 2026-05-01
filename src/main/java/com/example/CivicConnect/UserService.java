@@ -108,30 +108,30 @@ public class UserService {
     // ✅ UPDATE USER
     public User updateUser(Long id, User updatedUser) {
 
-        User user = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    User user = repo.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
+    if (updatedUser.getName() != null && !updatedUser.getName().isEmpty()) {
         user.setName(updatedUser.getName());
+    }
+
+    if (updatedUser.getRole() != null && !updatedUser.getRole().isEmpty()) {
         user.setRole(updatedUser.getRole());
-        user.setStreet(updatedUser.getStreet());
-        user.setDistrict(updatedUser.getDistrict());
-        user.setState(updatedUser.getState());
-        user.setWardNumber(updatedUser.getWardNumber());
-
-        // 🔥 optional password update
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            user.setPassword(encoder.encode(updatedUser.getPassword()));
-        }
-
-        return repo.save(user);
     }
 
-    // ✅ CLEAR ALL
-    public void clearAllUsers() {
-        repo.deleteAll();
+    if (updatedUser.getStreet() != null) user.setStreet(updatedUser.getStreet());
+    if (updatedUser.getDistrict() != null) user.setDistrict(updatedUser.getDistrict());
+    if (updatedUser.getState() != null) user.setState(updatedUser.getState());
+    if (updatedUser.getWardNumber() != null) user.setWardNumber(updatedUser.getWardNumber());
+
+    // 🔥 optional password update
+    if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+        user.setPassword(encoder.encode(updatedUser.getPassword()));
     }
 
-    public long count() {
-        return repo.count();
-    }
+    User saved = repo.save(user);
+    saved.setPassword(null); // 🔥 hide password
+
+    return saved;
+}
 }
