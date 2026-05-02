@@ -19,7 +19,7 @@ public class UserService {
 
     // ✅ CHECK EMAIL
     public boolean existsByEmail(String email) {
-        return repo.existsByEmail(email.toLowerCase().trim());
+        return repo.existsByEmailIgnoreCase(email.toLowerCase().trim()); // ✅ FIX
     }
 
     // ✅ SIGNUP
@@ -27,7 +27,7 @@ public class UserService {
 
         String email = user.getEmail().toLowerCase().trim();
 
-        if (repo.existsByEmail(email)) {
+        if (repo.existsByEmailIgnoreCase(email)) { // ✅ FIX
             return "Email already exists ❌";
         }
 
@@ -57,7 +57,7 @@ public class UserService {
 
         String email = user.getEmail().toLowerCase().trim();
 
-        Optional<User> existing = repo.findByEmail(email);
+        Optional<User> existing = repo.findByEmailIgnoreCase(email); // ✅ FIX
 
         if (existing.isEmpty()) return null;
 
@@ -76,7 +76,7 @@ public class UserService {
 
         String email = user.getEmail().toLowerCase().trim();
 
-        if (repo.existsByEmail(email)) {
+        if (repo.existsByEmailIgnoreCase(email)) { // ✅ FIX
             throw new RuntimeException("Email already exists ❌");
         }
 
@@ -105,7 +105,7 @@ public class UserService {
         repo.deleteById(id);
     }
 
-    // ✅ UPDATE USER (🔥 FIXED)
+    // ✅ UPDATE USER
     public User updateUser(Long id, User updatedUser) {
 
         User user = repo.findById(id)
@@ -117,11 +117,20 @@ public class UserService {
         user.setState(updatedUser.getState());
         user.setWardNumber(updatedUser.getWardNumber());
 
-        // ✅ ONLY update password if provided (FIXED)
+        // ✅ ONLY update password if provided
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty()) {
-            user.setPassword(encoder.encode(updatedUser.getPassword())); // ✅ FIX
+            user.setPassword(encoder.encode(updatedUser.getPassword()));
         }
 
         return repo.save(user);
+    }
+
+    // ✅ ADD THESE (required by controller)
+    public long count() {
+        return repo.count();
+    }
+
+    public void clearAllUsers() {
+        repo.deleteAll();
     }
 }
