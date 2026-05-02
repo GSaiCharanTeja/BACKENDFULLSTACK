@@ -127,4 +127,57 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
             .body(Map.of("message", "Email sending failed ❌"));
 }
     private Map<String, Long> otpExpiry = new HashMap<>();
+
+    @PostMapping("/verify-otp")
+public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
+
+    String email = body.get("email");
+    String otp = body.get("otp");
+
+    if (email == null || otp == null) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", "Email and OTP required ❌"));
+    }
+
+    email = email.toLowerCase().trim();
+
+    String storedOtp = otpStore.get(email);
+    Long expiry = otpExpiry.get(email);
+
+    // ❌ No OTP found
+    if (storedOtp == null || expiry == null) {
+        return ResponseEntity.status(400)
+                .body(Map.of("message", "OTP not found ❌"));
+    }
+
+    // ❌ Expired
+    if (System.currentTimeMillis() > expiry) {
+        otpStore.remove(email);
+        otpExpiry.remove(email);
+        return ResponseEntity.status(400)
+                .body(Map.of("message", "OTP expired ❌"));
+    }
+
+    // ❌ Incorrect
+    if (!storedOtp.equals(otp)) {
+        return ResponseEntity.status(400)
+                .body(Map.of("message", "Invalid OTP ❌"));
+    }
+
+    // ✅ OTP correct → create user
+    User user = new User();
+    user.setEmail(email);
+    user.setName(body.get("name"));
+    user.setPassword(body.get("password"));
+    user.setRole("CITIZEN"); // or from body if needed
+
+    // save user (uses hashing)
+    service.createUser(user);
+
+    // cleanup
+    otpStore.remove(email);
+    otpExpiry.remove(email);
+
+    return ResponseEntity.ok(user);
+}
 }
