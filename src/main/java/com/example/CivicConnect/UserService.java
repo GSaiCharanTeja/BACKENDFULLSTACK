@@ -105,22 +105,23 @@ public class UserService {
         repo.deleteById(id);
     }
 
-    // ✅ UPDATE USER
+    // ✅ UPDATE USER (🔥 FIXED)
     public User updateUser(Long id, User updatedUser) {
-    User user = repo.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
 
-    user.setName(updatedUser.getName());
-    user.setStreet(updatedUser.getStreet());
-    user.setDistrict(updatedUser.getDistrict());
-    user.setState(updatedUser.getState());
-    user.setWardNumber(updatedUser.getWardNumber());
+        User user = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // ✅ ONLY update password if provided
-    if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-        user.setPassword(passwordEncoder.encode(updatedUser.getPassword())); // 🔥 FIX
+        user.setName(updatedUser.getName());
+        user.setStreet(updatedUser.getStreet());
+        user.setDistrict(updatedUser.getDistrict());
+        user.setState(updatedUser.getState());
+        user.setWardNumber(updatedUser.getWardNumber());
+
+        // ✅ ONLY update password if provided (FIXED)
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty()) {
+            user.setPassword(encoder.encode(updatedUser.getPassword())); // ✅ FIX
+        }
+
+        return repo.save(user);
     }
-
-    return repo.save(user);
-}
 }
