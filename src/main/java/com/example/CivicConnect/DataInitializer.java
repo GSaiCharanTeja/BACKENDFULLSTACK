@@ -14,7 +14,7 @@ public class DataInitializer {
 
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-            if (!repo.existsByEmail("admin@civic.gov")) {
+            if (!repo.existsByEmailIgnoreCase("admin@civic.gov")) {
 
                 User u = new User();
                 u.setName("Admin User");
