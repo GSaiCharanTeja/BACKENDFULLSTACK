@@ -126,4 +126,5 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
     return ResponseEntity.status(500)
             .body(Map.of("message", "Email sending failed ❌"));
 }
+    private Map<String, Long> otpExpiry = new HashMap<>();
 }
