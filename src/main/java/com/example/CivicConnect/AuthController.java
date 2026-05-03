@@ -47,21 +47,18 @@ public ResponseEntity<?> loginUser(@RequestBody User user) {
 }
 
     // ================= CREATE USER (ADMIN) =================
-   @PostMapping("/users")
+ @PostMapping("/users")
 public User createUser(@RequestBody User user) {
 
     if (service.existsByEmail(user.getEmail())) {
         throw new RuntimeException("Email already exists ❌");
     }
 
-    // ✅ ensure admin-created users are active unless specified
-    if (user.getActive() == null) {
-        user.setActive(true);
-    }
+    // ✅ always set active true by default
+    user.setActive(true);
 
     return service.createUser(user);
 }
-
     // ================= GET USERS =================
     @GetMapping("/users")
     public List<User> getAllUsers() {
