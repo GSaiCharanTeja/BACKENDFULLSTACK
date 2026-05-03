@@ -135,7 +135,7 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
             .body(Map.of("message", "Email sending failed ❌"));
 }
     private Map<String, Long> otpExpiry = new HashMap<>();
-    @PostMapping("/verify-otp")
+  @PostMapping("/verify-otp")
 public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
 
     String email = body.get("email");
@@ -168,18 +168,30 @@ public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
                 .body(Map.of("message", "Invalid OTP ❌"));
     }
 
-    // ✅ CREATE USER
+    // ================= ✅ CREATE USER =================
     User user = new User();
+
     user.setEmail(email);
     user.setName(body.get("name"));
     user.setPassword(body.get("password"));
     user.setRole(body.getOrDefault("role", "CITIZEN"));
+    user.setActive(true);
 
-    // 🔥 IMPORTANT FIX
-    user.setActive(true);   // ✅ default active
+    // 🔥 FIX STARTS HERE (IMPORTANT)
+    String wardStr = body.get("wardNumber");
+    if (wardStr != null && !wardStr.isEmpty()) {
+        user.setWardNumber(Integer.parseInt(wardStr));
+    }
 
+    user.setStreet(body.get("street"));
+    user.setDistrict(body.get("district"));
+    user.setState(body.get("state"));
+    // 🔥 FIX ENDS HERE
+
+    // SAVE USER
     service.createUser(user);
 
+    // CLEAR OTP
     otpStore.remove(email);
     otpExpiry.remove(email);
 
