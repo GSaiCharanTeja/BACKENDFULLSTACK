@@ -26,30 +26,41 @@ public class AuthController {
     }
 
     // ================= LOGIN =================
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody User user) {
-        User loggedInUser = service.login(user);
+   @PostMapping("/login")
+public ResponseEntity<?> loginUser(@RequestBody User user) {
+    User loggedInUser = service.login(user);
 
-        if (loggedInUser == null) {
-            return ResponseEntity
-                    .status(401)
-                    .body(Map.of("message", "Invalid credentials"));
-        }
-
-        return ResponseEntity.ok(loggedInUser);
+    if (loggedInUser == null) {
+        return ResponseEntity
+                .status(401)
+                .body(Map.of("message", "Invalid credentials"));
     }
+
+    // 🔥 ADD THIS CHECK
+    if (!loggedInUser.isActive()) {
+        return ResponseEntity
+                .status(403)
+                .body(Map.of("message", "Account is deactivated by admin ❌"));
+    }
+
+    return ResponseEntity.ok(loggedInUser);
+}
 
     // ================= CREATE USER (ADMIN) =================
-    @PostMapping("/users")
-    public User createUser(@RequestBody User user) {
+   @PostMapping("/users")
+public User createUser(@RequestBody User user) {
 
-        // 🔥 prevent duplicate email
-        if (service.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists ❌");
-        }
-
-        return service.createUser(user);
+    if (service.existsByEmail(user.getEmail())) {
+        throw new RuntimeException("Email already exists ❌");
     }
+
+    // ✅ ensure admin-created users are active unless specified
+    if (user.getActive() == null) {
+        user.setActive(true);
+    }
+
+    return service.createUser(user);
+}
 
     // ================= GET USERS =================
     @GetMapping("/users")
@@ -127,7 +138,6 @@ public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
             .body(Map.of("message", "Email sending failed ❌"));
 }
     private Map<String, Long> otpExpiry = new HashMap<>();
-
     @PostMapping("/verify-otp")
 public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
 
@@ -144,13 +154,11 @@ public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
     String storedOtp = otpStore.get(email);
     Long expiry = otpExpiry.get(email);
 
-    // ❌ No OTP found
     if (storedOtp == null || expiry == null) {
         return ResponseEntity.status(400)
                 .body(Map.of("message", "OTP not found ❌"));
     }
 
-    // ❌ Expired
     if (System.currentTimeMillis() > expiry) {
         otpStore.remove(email);
         otpExpiry.remove(email);
@@ -158,26 +166,26 @@ public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
                 .body(Map.of("message", "OTP expired ❌"));
     }
 
-    // ❌ Incorrect
     if (!storedOtp.equals(otp)) {
         return ResponseEntity.status(400)
                 .body(Map.of("message", "Invalid OTP ❌"));
     }
 
-    // ✅ OTP correct → create user
+    // ✅ CREATE USER
     User user = new User();
     user.setEmail(email);
     user.setName(body.get("name"));
     user.setPassword(body.get("password"));
-    user.setRole("CITIZEN"); // or from body if needed
+    user.setRole(body.getOrDefault("role", "CITIZEN"));
 
-    // save user (uses hashing)
+    // 🔥 IMPORTANT FIX
+    user.setActive(true);   // ✅ default active
+
     service.createUser(user);
 
-    // cleanup
     otpStore.remove(email);
     otpExpiry.remove(email);
 
     return ResponseEntity.ok(user);
-}
+    }
 }
