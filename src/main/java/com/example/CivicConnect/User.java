@@ -24,6 +24,14 @@ public class User {
     private String district;
     private String state;
     private Integer pincode;
+	private boolean active;
+	public boolean isActive() {
+    return active;
+}
+
+public void setActive(boolean active) {
+    this.active = active;
+}
 	public Integer getPincode() {
 		return pincode;
 	}
